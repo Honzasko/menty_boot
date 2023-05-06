@@ -8,7 +8,7 @@ loadSecond:
 mov ax,0
 mov es,ax
 mov ah,0x02
-mov  al, 4
+mov  al, 6
 mov  bx, 0x7E00
 mov  cx, 0x0002
 mov  dl, byte [bootdrive]
@@ -20,12 +20,26 @@ ret
 mov byte [error],ah
 ret
 
+enable_a20:
+  mov al, 0xd1 ; Prepare to write to the keyboard controller command register
+  out 0x64, al ; Send the write command to the keyboard controller
+  nop          ; Wait for the keyboard controller to get ready
+wait_input:
+  in al, 0x64  ; Read the keyboard controller status register
+  test al, 0x2 ; Check if the input buffer is empty
+  jnz wait_input ; Wait until the input buffer is empty
+  mov al, 0xdf ; Write the command to enable the A20 line to the keyboard controller data port
+  out 0x60, al ; Send the command to the keyboard controller
+  ret          ; Return from the function
+
+
 code16:
 mov ax,0
 mov ds,ax
 mov fs,ax
 mov es,ax
 mov ss,ax
+
 
 enter32:
 mov byte [bootdrive],dl
@@ -35,8 +49,9 @@ int 0x10
 mov ax,2401h  
 int 15h
 call loadSecond
-cli
-lgdt [gdtr]
+cli ;enabling a20 line
+call enable_a20
+lgdt [gdtr] ;entering protected mode
 mov eax,cr0
 or al,1
 mov cr0,eax
