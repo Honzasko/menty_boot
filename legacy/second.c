@@ -5,58 +5,15 @@ struct video {
     char color;
 };
 
-struct conversion {
-    char buffer[11];
-    int len;
-};
-
-void boot_Main(uint32_t entry16);
-void print_lenght(struct video *v,char* text,int len); 
-void print(struct video *v, const char* text);
-void unsigned_int_to_string(unsigned int num, char* str);
-int strlen(const char* text);
-void print_char(char c);
+struct video v;
 
 int in = 0;
-void boot_Main(uint32_t entry16)
-{
-    if(entry16 == 0) return;
-    struct video v;
-    v.cursor = 0;
-    v.color = 0x0f;
-    print(&v, "Test\nnum: ");
-    unsigned int num = 123456789;
-    char str[20];
-    unsigned_int_to_string(num, str);
-    int len = strlen(str);
-    print_lenght(&v, "Length: ", 8);
-    print_lenght(&v, str, len);
-
-}
 
 int strlen(const char* text)
 {
     int len = 0;
     while(text[len] != 0) len++;
     return len;
-}
-
-void unsigned_int_to_string(unsigned int num, char* str) {
-    int i = 0;
-    do {
-        str[i++] = num % 10 + '0';
-        num /= 10;
-    } while (num != 0);
-    str[i] = '\0';
-    
-    // reverse the string
-    int j = i - 1;
-    i = 0;
-    while (i < j) {
-        char temp = str[i];
-        str[i++] = str[j];
-        str[j--] = temp;
-    }
 }
 
 void print_lenght(struct video *v,char* text,int len) 
@@ -92,4 +49,24 @@ void print(struct video* vid, const char* text)
     vid->cursor = in;
 }
 
+void print_num(struct video *v,unsigned int num) {
+	char buffer[11];
+	int i = 0;
+	while(num != 0)
+	{
+		buffer[10-i] = '0' + (num % 10);
+		num /= 10;
+		i++;
+	}
+    print_lenght(v,&buffer[10-i+1],i);
+}
 
+
+void boot_Main(uint32_t entry16)
+{
+    if(entry16 == 0) return;
+    v.cursor = 0;
+    v.color = 0x0f;
+    print(&v, "Test\nnum:");
+	print_num(&v,123456);
+}
