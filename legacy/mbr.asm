@@ -5,14 +5,11 @@ jmp enter32
 
 
 loadSecond:
-mov ax,0
-mov es,ax
-mov ah,0x02
-mov  al, 6
-mov  bx, 0x7E00
-mov  cx, 0x0002
-mov  dl, byte [bootdrive]
-xor  dh, dh
+xor ax,ax
+mov ds,ax
+mov ah,42h
+mov dl,byte [diskinfo.bootdrive]
+mov si,dap
 int 13h
 jc .error
 ret
@@ -21,16 +18,16 @@ mov byte [error],ah
 ret
 
 enable_a20:
-  mov al, 0xd1 ; Prepare to write to the keyboard controller command register
-  out 0x64, al ; Send the write command to the keyboard controller
-  nop          ; Wait for the keyboard controller to get ready
+  mov al, 0xd1 
+  out 0x64, al 
+  nop         
 wait_input:
-  in al, 0x64  ; Read the keyboard controller status register
-  test al, 0x2 ; Check if the input buffer is empty
-  jnz wait_input ; Wait until the input buffer is empty
-  mov al, 0xdf ; Write the command to enable the A20 line to the keyboard controller data port
-  out 0x60, al ; Send the command to the keyboard controller
-  ret          ; Return from the function
+  in al, 0x64 
+  test al, 0x2
+  jnz wait_input
+  mov al, 0xdf
+  out 0x60, al 
+  ret      
 
 
 code16:
@@ -42,7 +39,7 @@ mov ss,ax
 
 
 enter32:
-mov byte [bootdrive],dl
+mov byte [diskinfo.bootdrive],dl
 mov al,0x03
 mov ah,0 
 int 0x10
@@ -64,18 +61,16 @@ jmp codeseg:main32
 
 [bits 32]
 main32:
-mov esp,0x00000500
-cmp byte [error],0
+mov esp,0x00000500 ;set stack for protected mode
+cmp byte [error],0 ;check if there was disk reading error
 jne .errno
-mov edi,0
-mov edi,enter16
-push edi
-call 0x00007E00
+push diskinfo ;add basic structure for second stage
+call 0x00007E00 ;call main function of second stage 
 hlt
 .errno:
 mov al,byte [error]
 add al,48
-or ax,0x0f << 8
+or ax,0x0f << 8 
 mov word [0xb8000],ax
 hlt
 
@@ -111,16 +106,19 @@ jl .loop
 mov dword [index],ebx
 ret
 
-enter16:
-mov eax,dataseg16
-mov ds,eax
-mov fs,eax
-mov es,eax
-mov ss,eax
-lgdt [gdtr16]
-jmp 0:code16
+;disk address packet
+dap:
+  .size db 10h
+  .unused db 0
+  .sectors_to_read dw 6
+  .segment dw 0
+  .offset  dw 0x7E00
+  .start_sector dq 1
 
-bootdrive db 0
+
+diskinfo:
+    .bootdrive db 0
+
 error db 0
 index dd 0
 message: db "Test msg"
@@ -144,18 +142,6 @@ gdt32_end:
 codeseg equ gdt32.codeseg - gdt32
 dataseg equ gdt32.dseg - gdt32
 
-gdtr16:
-dw gdt32_end-gdt32 - 1
-dq gdt32
-
-gdt16:
-.null_seg:dq 0 ;zero entry
-.codeseg: dq 0x00009a000000ffff
-.dseg: dq 0x000093000000ffff
-gdt16_end:
-
-codeseg16 equ gdt16.codeseg - gdt16
-dataseg16 equ gdt16.dseg - gdt16
 
 times 510-($-$$) db 0
 dw 0xaa55 ;bootable device signature
