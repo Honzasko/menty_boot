@@ -113,7 +113,7 @@ dap:
   .sectors_to_read dw 6
   .segment dw 0
   .offset  dw 0x7E00
-  .start_sector dq 1
+  .start_sector dq 35
 
 
 diskinfo:
@@ -143,5 +143,3 @@ codeseg equ gdt32.codeseg - gdt32
 dataseg equ gdt32.dseg - gdt32
 
 
-times 510-($-$$) db 0
-dw 0xaa55 ;bootable device signature
