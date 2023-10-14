@@ -26,12 +26,21 @@ void boot_Main(uint32_t ptrBootInfo) {
 
     print(&v, "Test\nnum:");
     print_hex(&v, n);
-    print(&v, "\nDrive type: ");
+    print(&v, "\nDrive: ");
     IOregisters properties;
-    print(&v, "Master");
+    print(&v, "Primary Master");
     Command(&properties,PRIMARY_IO,MASTER_DRIVE,IDENTIFY);
     uint16_t lba48 = (properties.Data[83] >> 10) & 1;
     uint32_t sectorCount = 0;
+    uint8_t cl = properties.LBAmiddle;
+    uint8_t ch = properties.LBAhigh;
+    print(&v, "\nDevice type: ");
+    if(cl == 0x14 && ch == 0xEB) print( &v, "PATAPI");
+    else if(cl == 0x69 && ch == 0x96) print( &v, "SATAPI");
+    else if(cl == 0 && ch == 0) print( &v, "PATA");
+    else if(cl == 0x3c && ch == 0xc3) print( &v, "SATA");
+
+
     if(lba48 == 1){
         print(&v, "\nLBA48 mode is supported");
         sectorCount = (uint32_t)properties.Data[100] | (uint32_t)properties.Data[101] << 16;
@@ -46,12 +55,20 @@ void boot_Main(uint32_t ptrBootInfo) {
     IOregisters read;
 
     uint32_t LBA = 52;
-    read.LBAlow = LBA & 0xFFFF;
-    read.LBAmiddle = (LBA >> 16) & 0xFFFF;
     read.SectorCount = 1;
-    print_num(&v, (uint32_t)read.LBAmiddle);
-    Command(&read,PRIMARY_IO,0x40 ,READ_LBA28);
-        uint32_t err = read.Error;
+    if(lba48 != 1)
+    {
+        read.LBAlow = LBA & 0xFF;
+        read.LBAmiddle = (LBA >> 8) & 0xFF;
+        read.LBAhigh = (LBA >> 16) & 0xFF;
+        Command(&read,PRIMARY_IO,0xE0 ,READ_LBA28);
+    }
+    else {
+                read.LBAlow = LBA & 0xFFFF;
+                read.LBAmiddle = (LBA >> 16) & 0xFFFF;
+                Command(&read,PRIMARY_IO,0x40 ,READ_LBA48);
+    }
+    uint32_t err = read.Error;
         if(err == 0)
         {
             print(&v, "\nSector text:");

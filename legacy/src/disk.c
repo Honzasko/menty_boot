@@ -40,7 +40,7 @@ void Command(IOregisters* properties, uint16_t bus, uint8_t driveType,uint8_t co
     }
     else if(command == READ_LBA28)
     {
-        outb(0x1F6,0xE0);
+        outb(0x1F6,driveType);
         outb(bus+SECTOR_COUNT_REGISTER,(unsigned char)(properties->SectorCount & 0xFF));
         outb(bus+LBAlo,(unsigned char)(properties->LBAlow & 0xFF));
         outb(bus+LBAmid,(unsigned char)(properties->LBAmiddle & 0xFF));
@@ -58,5 +58,11 @@ void Command(IOregisters* properties, uint16_t bus, uint8_t driveType,uint8_t co
     for(int i = 0;i < 256;i++)
     {
             properties->Data[i] = inw(PRIMARY_IO);
+    }
+
+    if(command == IDENTIFY)
+    {
+        properties->LBAmiddle = inb(bus+LBAmid);
+        properties->LBAhigh = inb(bus+LBAhi);
     }
 }
