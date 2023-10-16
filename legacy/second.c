@@ -1,6 +1,8 @@
 #include <stdint.h>
 #include "include/video.h"
 #include "include/disk.h"
+#include "include/gpt.h"
+#include "include/fat.h"
 
 struct video v;
 
@@ -15,6 +17,15 @@ int strlen(const char* text) {
     return len;
 }
 
+int strcmp(const char* a ,const char* b, int len)
+{
+    for(int i = 0;i < len;i++)
+    {
+        if(a[i] != b[i]) return 0;
+    }
+    return 1;
+}
+
 
 void boot_Main(uint32_t ptrBootInfo) {
     struct bootinfo info = *(struct bootinfo*)ptrBootInfo;
@@ -25,66 +36,27 @@ void boot_Main(uint32_t ptrBootInfo) {
     uint32_t n = info.driveNumber;
 
     print(&v, "Test\nnum:");
-    print_hex(&v, n);
-    print(&v, "\nDrive: ");
-    IOregisters properties;
-    print(&v, "Primary Master");
-    Command(&properties,PRIMARY_IO,MASTER_DRIVE,IDENTIFY);
-    uint16_t lba48 = (properties.Data[83] >> 10) & 1;
-    uint32_t sectorCount = 0;
-    uint8_t cl = properties.LBAmiddle;
-    uint8_t ch = properties.LBAhigh;
-    print(&v, "\nDevice type: ");
-    if(cl == 0x14 && ch == 0xEB) print( &v, "PATAPI");
-    else if(cl == 0x69 && ch == 0x96) print( &v, "SATAPI");
-    else if(cl == 0 && ch == 0) print( &v, "PATA");
-    else if(cl == 0x3c && ch == 0xc3) print( &v, "SATA");
-
-
-    if(lba48 == 1){
-        print(&v, "\nLBA48 mode is supported");
-        sectorCount = (uint32_t)properties.Data[100] | (uint32_t)properties.Data[101] << 16;
+    print_hex(&v, n,1);
+    Disk disk;
+    switch (n) {
+        case 0x80: Identify(&disk, PRIMARY_BUS, 0);break;
+        case 0x81: Identify(&disk, PRIMARY_BUS, 1);break;
+        case 0x82: Identify(&disk, SECONDARY_BUS, 0);break;
+        case 0x83: Identify(&disk, SECONDARY_BUS, 1);break;
     }
-    else {
-        print(&v, "\nLBA48 mode is not supported");
-        sectorCount = (uint32_t)properties.Data[60] | (uint32_t)properties.Data[61] << 16;
-    }
-    print(&v, "\nSector count: ");
-    print_num(&v, sectorCount);
-
-    IOregisters read;
-
-    uint32_t LBA = 52;
-    read.SectorCount = 1;
-    if(lba48 != 1)
+    print(&v, "\nMax LBA: ");
+    print_num(&v, disk.MaxLBA);
+    PartitionTableHeader gpt;
+    Read(&disk, 1, 1, (uint32_t)&gpt);
+    if(strcmp(gpt.Signature, "EFI PART", 8) != 1)
     {
-        read.LBAlow = LBA & 0xFF;
-        read.LBAmiddle = (LBA >> 8) & 0xFF;
-        read.LBAhigh = (LBA >> 16) & 0xFF;
-        Command(&read,PRIMARY_IO,0xE0 ,READ_LBA28);
+        print(&v, "Invalid GPT");
+        __asm__ volatile("hlt");
     }
-    else {
-                read.LBAlow = LBA & 0xFFFF;
-                read.LBAmiddle = (LBA >> 16) & 0xFFFF;
-                Command(&read,PRIMARY_IO,0x40 ,READ_LBA48);
+    print(&v, "\nDisk GUID:");
+    for(int i = 0;i < 16;i++)
+    {
+        print_hex(&v, (uint8_t)gpt.Disk_GUID[i] & 0xFF, 0);
+        if (i == 3 || i == 5 || i == 7 || i == 9) printChar(&v, '-');
     }
-    uint32_t err = read.Error;
-        if(err == 0)
-        {
-            print(&v, "\nSector text:");
-            print(&v, (const char*)&read.Data);
-        }
-        else {
-                    print(&v, "\nDisk operation error: ");
-                    switch (err) {
-                        case 1: print(&v,"Adress mark not found");break;
-                        case 2: print(&v,"Track zero not found");break;
-                        case 4: print(&v, "Aborted");break;
-                        case 8: print(&v, "Media change request");break;
-                        case 16: print(&v, "ID not found");break;
-                        case 32: print(&v, "Media changed");break;
-                        case 64: print(&v,"Uncorrectable data error");break;
-                        case 128: print(&v,"Bad Block detected");break;
-                    }
-        }
 }

@@ -64,7 +64,7 @@ hlt
 dap:
   .size db 10h
   .unused db 0
-  .sectors_to_read dw 15
+  .sectors_to_read dw 20
   .segment dw 0
   .offset  dw 0x7E00
   .start_sector dq 35

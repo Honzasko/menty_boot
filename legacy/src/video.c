@@ -1,5 +1,6 @@
 #pragma once
 #include "../include/video.h"
+#include <stdint.h>
 
 void print_lenght(struct video *v,char* text,int len) 
 {
@@ -34,6 +35,20 @@ void print(struct video* vid, const char* text)
     vid->cursor = in;
 }
 
+void printChar(struct video* vid,  char l)
+{
+    unsigned short *vid_mem = (unsigned short *)0xb8000;
+    int in = vid->cursor;
+    if(l == '\n')
+    {
+        in += 80 - in % 80;
+        return;
+    }
+    vid_mem[in] = l | vid->color << 8;
+    in++;
+    vid->cursor = in;
+}
+
 void print_num(struct video *v,unsigned int num) {
 	char buffer[11];
 	int i = 0;
@@ -46,7 +61,7 @@ void print_num(struct video *v,unsigned int num) {
     print_lenght(v,&buffer[10-i+1],i);
 }
 
-void print_hex(struct video *v,unsigned int num)
+void print_hex(struct video *v,unsigned int num,uint8_t x)
 {
 	char buffer[11];
 	int i = 0;
@@ -63,6 +78,9 @@ void print_hex(struct video *v,unsigned int num)
 		num /= 16;
 		i++;
 	}
-	print(v,"0x");
+	if(x == 1)
+    {
+        print(v,"0x");
+    }
     print_lenght(v,&buffer[10-i+1],i);
 }
