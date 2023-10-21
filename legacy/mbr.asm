@@ -55,7 +55,7 @@ jmp codeseg:main32
 
 [bits 32]
 main32:
-mov esp,0x00000500 ;set stack for protected mode
+mov esp,0x00100000  ;set stack for protected mode
 push diskinfo ;add basic structure for second stage
 call 0x00007E00 ;call main function of second stage 
 hlt
@@ -64,7 +64,7 @@ hlt
 dap:
   .size db 10h
   .unused db 0
-  .sectors_to_read dw 20
+  .sectors_to_read dw 25
   .segment dw 0
   .offset  dw 0x7E00
   .start_sector dq 35

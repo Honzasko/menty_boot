@@ -33,6 +33,7 @@ uint8_t Signature;
 uint32_t VolumeID;
 uint8_t VolumeLabel[11];
 uint8_t SystemIdentifier[8]; //Specs says never trust
+uint8_t zero[421];
 }BPB_FAT32;
 
 typedef struct {
