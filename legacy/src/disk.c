@@ -48,6 +48,8 @@ void Identify(Disk *d,uint16_t bus,uint8_t slave)
             data[i] = inw(bus+DATA_REGISTER);
     }
     d->bus = bus;
+
+    //the 10th bit of 83th uint16 in returned identify data set if LBA48 is supported or not and then get max lba from right place
     d->LBA48 = (data[83] >> 10) & 1;
     if(d->LBA48 == 1)
     {
@@ -61,6 +63,7 @@ void Identify(Disk *d,uint16_t bus,uint8_t slave)
 
 uint8_t Read(Disk *d,uint32_t LBA,uint16_t num,uint32_t addr)
 {
+    //check if LBA48 is supported,if yes it will use LBA48 mode otherwise it will use LBA28 mode
     if(d->LBA48 == 1)
     {
         if(d->dev == MASTER_DRIVE)
@@ -70,9 +73,10 @@ uint8_t Read(Disk *d,uint32_t LBA,uint16_t num,uint32_t addr)
         else {
             outb(d->bus+DRIVE,0x50);
         }
+        uint16_t LBAmiddle =   (uint16_t)(LBA<< 16) & 0xFFFF;
         outw(d->bus+SECTOR_COUNT_REGISTER, num);
         outw(d->bus+LBAlo,(uint16_t)LBA & 0xFFFF);
-        outw(d->bus+LBAmid,(uint16_t)(LBA << 16) & 0xFFFF);
+        if(LBAmiddle > 0) outw(d->bus+LBAmid,LBAmiddle);
         outb(d->bus+COMMAND,READ_LBA48);
     }
     else {
@@ -89,13 +93,15 @@ uint8_t Read(Disk *d,uint32_t LBA,uint16_t num,uint32_t addr)
         outw(d->bus+LBAhi, (uint8_t)(LBA << 16) & 0xFF);
         outb(d->bus+COMMAND,READ_LBA28);
     }
-
+    //wait until drive is ready to send data and check for error
     ATAsleep(d->bus);
     if(error == 1)
     {
         return inb(d->bus+ERROR_REGISTER);
     }
 
+    //return the data
+    //the driver count that the user has drive with 512 bytes sector size
     uint16_t *data = (uint16_t*)addr;
     for(int i = 0; i < (256*num);i++)
     {

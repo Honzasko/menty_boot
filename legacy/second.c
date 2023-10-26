@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <uchar.h>
+#include "include/asm.h"
 #include "include/video.h"
 #include "include/disk.h"
 #include "include/gpt.h"
@@ -52,12 +53,14 @@ void boot_Main(uint32_t ptrBootInfo) {
     if(check != 0)
     {
         print(&v, "Failed to load Partition Header");
-        __asm__ volatile("hlt");
+        HALT;
     }
     if(strcmp(gpt.Signature, "EFI PART", 8) != 1)
     {
-        print(&v, "Invalid GPT");
-        __asm__ volatile("hlt");
+        print(&v,"\n ");
+        print_lenght(&v, gpt.Signature, 8);
+        print(&v, "\n Invalid GPT");
+        HALT;
     }
     print(&v, "\nDisk GUID:");
     for(int i = 0;i < 16;i++)
@@ -71,7 +74,7 @@ void boot_Main(uint32_t ptrBootInfo) {
     if(check2 != 0)
     {
         print(&v, "Failed to load Partition Entries");
-        __asm__ volatile("hlt");
+        HALT;
     }
 
     PartitionEntry *entries = (PartitionEntry*)0x00000500;
@@ -88,11 +91,12 @@ void boot_Main(uint32_t ptrBootInfo) {
     efi.data4[6] = 0xC9;
     efi.data4[7] = 0x3B;
 
-int efi_partition = 0;
-int efi_partition_found = 0;
+uint32_t efi_partition = 0;
+uint8_t  efi_partition_found = 0;
 
 for(uint32_t i = 0;i < gpt.NumOfPartitionEntries;i++)
 {
+
     if(efi.data1 == entries[i].PartitionTypeGUID.data1 && efi.data2 == entries[i].PartitionTypeGUID.data2 && efi.data3 == entries[i].PartitionTypeGUID.data3 && strcmp(efi.data4, entries[i].PartitionTypeGUID.data4, 8))
     {
         
@@ -104,10 +108,26 @@ for(uint32_t i = 0;i < gpt.NumOfPartitionEntries;i++)
 if(efi_partition_found != 1)
 {
     print(&v, "\nEfi partition not found");
-    __asm__ volatile("hlt");
+    HALT;
 }
 
+uint32_t LBAefi = entries[efi_partition].StartingLBALow;
+print(&v, "\nLBA EFI Start:");
+print_num(&v, LBAefi);
 
+
+BPB_FAT32 bpb;
+
+uint8_t check3 = Read(&disk, LBAefi, 1, (uint32_t)&bpb);
+if(check3 != 0)
+{
+    print(&v, "\nFailed to load BIOS Parameter Block\nAta error code:");
+    print_hex(&v, check3,1);
+    HALT;
+}
+
+print(&v, "\n ");
+print_num(&v,bpb.base.OEMIdentifier[0]);
 
 }
 

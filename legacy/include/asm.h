@@ -1,3 +1,5 @@
+#define HALT  __asm__ volatile("hlt")
+
 #pragma once
 #include <stdint.h>
 

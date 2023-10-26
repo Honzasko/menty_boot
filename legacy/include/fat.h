@@ -1,9 +1,11 @@
 #pragma once
 #include <stdint.h>
 
+#pragma pack(1)
+
 typedef struct {
 uint8_t jmpnop[3];
-uint8_t OEMIdentifier[8];
+char OEMIdentifier[8];
 uint16_t BytesPerSector;
 uint8_t SectorsPerCluster;
 uint16_t NumberOfReservedSectors;
@@ -16,7 +18,7 @@ uint16_t SectorsPerTrack;
 uint16_t NumberOfHeads;
 uint32_t HiddenSectors;
 uint32_t LargeSectorCount;
-}BPB;
+}  BPB;
 
 typedef struct {
 BPB base;
@@ -32,9 +34,10 @@ uint8_t Reserved2;
 uint8_t Signature;
 uint32_t VolumeID;
 uint8_t VolumeLabel[11];
-uint8_t SystemIdentifier[8]; //Specs says never trust
-uint8_t zero[421];
-}BPB_FAT32;
+char SystemIdentifier[8]; //Specs says never trust
+uint8_t bootcode[420];
+uint16_t bootsignature;
+} BPB_FAT32;
 
 typedef struct {
 uint32_t LeadSignature;
@@ -44,4 +47,6 @@ uint32_t LastKnowfreeClustersCount;
 uint32_t StartAvaibleClusterNumber;
 uint8_t Reserved2[12];
 uint32_t TrailSignature;
-}FSInfo;
+} FSInfo;
+
+#pragma pack()

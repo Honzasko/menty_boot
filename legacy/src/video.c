@@ -10,7 +10,7 @@ void print_lenght(struct video *v,char* text,int len)
     int in = v->cursor;
     while(i != len)
     {
-        vid_mem[in] = text[i] & 0xFF | v->color << 8;
+        vid_mem[in] = text[i] | v->color << 8;
         i++;
         in++;
     }
@@ -33,7 +33,7 @@ void print(struct video* vid, const char* text)
             i++;
             continue;
         }
-        vid_mem[in] = text[i] & 0xFF | vid->color << 8;
+        vid_mem[in] = text[i]| vid->color << 8;
         in++;
         i++;
     }
@@ -53,7 +53,7 @@ void printChar(struct video* vid,  char l)
         in += 80 - in % 80;
         return;
     }
-    vid_mem[in] = l & 0xFF | vid->color << 8;
+    vid_mem[in] = l | vid->color << 8;
     in++;
     vid->cursor = in;
     outb(0x3D4, 0x0F);
