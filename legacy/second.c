@@ -11,6 +11,7 @@ struct video v;
 
 struct bootinfo {
     uint8_t driveNumber;
+    uint16_t mmap_lenght;
 };
 
 int strlen(const char* text) {
@@ -52,7 +53,7 @@ void boot_Main(uint32_t ptrBootInfo) {
     print(&v, "\n");
     
     MMAP_entry* mmap = (MMAP_entry*)0x00000500;
-    print_num(&v, mmap->Type);
+    print_hex(&v, mmap->BaseAdress_High,1);
 
 
 }

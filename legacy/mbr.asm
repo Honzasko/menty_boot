@@ -18,30 +18,31 @@ mov byte [error],ah
 ret
 
 getMemoryMap:
-    xor si, si                ; Clear SI (not used)
-    mov di, 0x0500            ; Offset for the memory map buffer
-    mov ax, 0x0000            ; Set segment to 0x0000 (example)
-    mov es, ax                ; Load segment into ES
-    xor ebx, ebx              ; EBX = 0 to start enumeration
-    mov edx, 0x534D4150       ; "SMAP" magic number
-    mov eax, 0xE820           ; Function identifier
-
+mov ax, 0
+mov es, ax
+mov di, 0x0500
+xor ebx,ebx
+mov edx, 0x534D4150 
 .loop:
-    mov ecx, 24               ; Size of the memory map entry structure
-    int 15h                   ; Call BIOS interrupt
-    jc .error                   ; If CF is set, exit (error)
-    cmp eax, 0x534D4150       ; Check if "SMAP" is returned
-    jne .error                  ; If not, exit (invalid response)
-    test ebx, ebx             ; Check if EBX = 0 (end of entries)
-    jz .end
-    add di,24
-    jmp .loop
-.error:
+mov eax,0xE820
+mov ecx,24
+int 15h
+jc .errno
+cmp eax,0x534D4150
+jne .errno
+cmp ebx,0
+je .end
+add di,24
+inc word [diskinfo.mmap_length]
+jmp .loop
+.end:
+ret
+.errno:
 mov ah, 0x0E
 mov ah,'E'
 int 10h
-.end:
-ret
+cli
+hlt
 
 
 enable_a20:
@@ -100,7 +101,7 @@ stack32 dd 0
 
 diskinfo:
     .bootdrive db 0
-    .read_disk_ptr dd 0
+    .mmap_length dw 0
 
 error db 0
 index dd 0
