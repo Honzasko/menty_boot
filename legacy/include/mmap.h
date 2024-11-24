@@ -1,0 +1,10 @@
+#include <stdint.h>
+#pragma once
+typedef struct{
+    uint32_t BaseAdress_Low;
+    uint32_t BaseAdress_High;
+    uint32_t Lenght_Low;
+    uint32_t Lenght_High;
+    uint32_t Type;
+    uint32_t ACPI;
+} MMAP_entry;

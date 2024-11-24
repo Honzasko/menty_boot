@@ -1,0 +1,13 @@
+build
+asm.o
+disk.o
+drive.img
+dumb.bin
+mbr.bin
+rawsec.bin
+second_entry_raw.o
+secontry_entry.o
+second.o
+secstage.bin
+test.txt
+video.o

@@ -105,6 +105,7 @@ uint8_t Read(Disk *d,uint32_t LBA,uint16_t num,uint32_t addr)
     uint16_t *data = (uint16_t*)addr;
     for(int i = 0; i < (256*num);i++)
     {
+        ATAsleep(d->bus);
         data[i] = inw(d->bus+DATA_REGISTER);
     }
 
