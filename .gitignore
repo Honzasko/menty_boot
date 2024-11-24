@@ -1,0 +1,13 @@
+legacy/build
+legacy/asm.o
+legacy/disk.o
+legacy/drive.img
+legacy/dump.bin
+legacy/mbr.bin
+legacy/rawsec.bin
+legacy/second_entry_raw.o
+legacy/secontry_entry.o
+legacy/second.o
+legacy/secstage.bin
+legacy/test.txt
+legacy/video.o
