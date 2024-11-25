@@ -53,7 +53,7 @@ void boot_Main(uint32_t ptrBootInfo) {
     print(&v, "\n");
     
     MMAP_entry* mmap = (MMAP_entry*)0x00000500;
-    print_hex(&v, mmap->BaseAdress_High,1);
+    print_hex(&v, mmap->Lenght_High,1);
 
 
 }

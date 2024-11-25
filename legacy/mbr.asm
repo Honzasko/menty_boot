@@ -24,22 +24,24 @@ mov di, 0x0500
 xor ebx,ebx
 mov edx, 0x534D4150 
 .loop:
-mov eax,0xE820
+mov ax,0xE820
 mov ecx,24
 int 15h
 jc .errno
 cmp eax,0x534D4150
 jne .errno
+cmp ecx,0
+je .errno
 cmp ebx,0
 je .end
-add di,24
+add di,20
 inc word [diskinfo.mmap_length]
 jmp .loop
 .end:
 ret
 .errno:
 mov ah, 0x0E
-mov ah,'E'
+mov al,'E'
 int 10h
 cli
 hlt
