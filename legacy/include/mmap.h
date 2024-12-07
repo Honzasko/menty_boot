@@ -7,4 +7,4 @@ typedef struct{
     uint32_t Lenght_High;
     uint32_t Type;
     uint32_t ACPI;
-} MMAP_entry;
+}__attribute__((packed)) MMAP_entry;

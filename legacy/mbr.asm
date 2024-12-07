@@ -20,21 +20,25 @@ ret
 getMemoryMap:
 mov ax, 0
 mov es, ax
-mov di, 0x0500
+xor bp,bp
+xor edi,edi
+mov di, 0x0510
 xor ebx,ebx
-mov edx, 0x534D4150 
 .loop:
-mov ax,0xE820
+mov edx, 'PAMS'
+mov eax,0xE820
 mov ecx,24
+mov dword [es:di + 20], 1
 int 15h
-jc .errno
-cmp eax,0x534D4150
-jne .errno
+jc short .errno
+cmp eax,'PAMS'
+jne short .errno
 cmp ecx,0
-je .errno
-cmp ebx,0
-je .end
-add di,20
+je short .loop
+test ebx,ebx
+je short .end
+add di,24
+inc bp
 inc word [diskinfo.mmap_length]
 jmp .loop
 .end:
@@ -86,7 +90,8 @@ jmp codeseg:main32
 [bits 32]
 main32:
 mov esp,0x00100000  ;set stack for protected mode
-push diskinfo ;add basic structure for second stage
+lea eax, [diskinfo]
+push eax
 call 0x00007E00 ;call main function of second stage 
 hlt
 

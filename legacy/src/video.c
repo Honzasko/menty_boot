@@ -65,12 +65,17 @@ void printChar(struct video* vid,  char l)
 void print_num(struct video *v,unsigned int num) {
 	char buffer[11];
 	int i = 0;
-	while(num != 0)
+    unsigned int n = num;
+	while(n != 0)
 	{
-		buffer[10-i] = '0' + (num % 10);
-		num /= 10;
+		buffer[10-i] = '0' + (n % 10);
+		n /= 10;
 		i++;
 	}
+     if(num == 0) {
+        printChar(v, '0');
+        return;
+    }
     print_lenght(v,&buffer[10-i+1],i);
 }
 
@@ -78,22 +83,27 @@ void print_hex(struct video *v,unsigned int num,uint8_t x)
 {
 	char buffer[11];
 	int i = 0;
-	while(num != 0)
+    unsigned int n = num;
+	while(n != 0)
 	{
 		buffer[10-i] = '0';
-		if((num % 16) > 9)
+		if((n % 16) > 9)
 		{
-			buffer[10-i] = 'A' +(num % 16) - 10;
+			buffer[10-i] = 'A' +(n % 16) - 10;
 		}
 		else {
-			buffer[10-i] = '0' + num % 16;
+			buffer[10-i] = '0' + n % 16;
 		}
-		num /= 16;
+		n /= 16;
 		i++;
 	}
 	if(x == 1)
     {
         print(v,"0x");
+    }
+    if(num == 0) {
+        printChar(v, '0');
+        return;
     }
     print_lenght(v,&buffer[10-i+1],i);
 }

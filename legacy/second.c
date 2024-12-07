@@ -12,7 +12,7 @@ struct video v;
 struct bootinfo {
     uint8_t driveNumber;
     uint16_t mmap_lenght;
-};
+}__attribute__((packed));
 
 int strlen(const char* text) {
     int len = 0;
@@ -52,9 +52,22 @@ void boot_Main(uint32_t ptrBootInfo) {
     print_num(&v, disk.MaxLBA);
     print(&v, "\n");
     
-    MMAP_entry* mmap = (MMAP_entry*)0x00000500;
-    print_hex(&v, mmap->Lenght_High,1);
-
+    MMAP_entry* mmap = (MMAP_entry*)(0x0000510);
+    for (uint16_t i = 0; i < info.mmap_lenght;i++) {
+        print(&v, "Base: ");
+        print_hex(&v, mmap[i].BaseAdress_Low, 1);
+        print(&v, " Length: ");
+        print_hex(&v, mmap[i].Lenght_Low, 1);
+        print(&v, " Type: ");
+        switch (mmap[i].Type) {
+            case 1: print(&v, " Available");break;
+            case 2: print(&v, " Reserved");break;
+            case 3: print(&v, " ACPI");break;
+            case 4: print(&v, " ACPI NVS");break;
+        }
+        print(&v, "\n");
+    }
+    
 
 }
 
