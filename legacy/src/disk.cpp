@@ -1,5 +1,5 @@
-#include "../include/disk.h"
-#include "../include/asm.h"
+#include "../include/disk.hpp"
+#include "../include/asm.hpp"
 #include <stdint.h>
 
 

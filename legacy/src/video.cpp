@@ -1,9 +1,8 @@
-#include "../include/asm.h"
+#include "../include/asm.hpp"
 #include <stdint.h>
-#include <uchar.h>
-#include "../include/video.h"
+#include "../include/video.hpp"
 
-void print_lenght(struct video *v,char* text,int len) 
+void video::print_lenght(struct video_info *v,char* text,int len) 
 {
     unsigned short *vid_mem = (unsigned short *)0xb8000;
     int i = 0;
@@ -21,7 +20,7 @@ void print_lenght(struct video *v,char* text,int len)
 	outb(0x3D5, (uint8_t) ((in >> 8) & 0xFF));
 }
 
-void print(struct video* vid, const char* text)
+void video::print(struct video_info* vid, const char* text)
 {
     unsigned short *vid_mem = (unsigned short *)0xb8000;
     int in = vid->cursor;
@@ -44,7 +43,7 @@ void print(struct video* vid, const char* text)
 	outb(0x3D5, (uint8_t) ((in >> 8) & 0xFF));
 }
 
-void printChar(struct video* vid,  char l)
+void video::printChar(struct video_info* vid,  char l)
 {
     unsigned short *vid_mem = (unsigned short *)0xb8000;
     int in = vid->cursor;
@@ -62,7 +61,7 @@ void printChar(struct video* vid,  char l)
 	outb(0x3D5, (uint8_t) ((in >> 8) & 0xFF));
 }
 
-void print_num(struct video *v,unsigned int num) {
+void video::print_num(struct video_info *v,unsigned int num) {
 	char buffer[11];
 	int i = 0;
     unsigned int n = num;
@@ -73,13 +72,13 @@ void print_num(struct video *v,unsigned int num) {
 		i++;
 	}
      if(num == 0) {
-        printChar(v, '0');
+        video::printChar(v, '0');
         return;
     }
-    print_lenght(v,&buffer[10-i+1],i);
+    video::print_lenght(v,&buffer[10-i+1],i);
 }
 
-void print_hex(struct video *v,unsigned int num,uint8_t x)
+void video::print_hex(struct video_info *v,unsigned int num,uint8_t x)
 {
 	char buffer[11];
 	int i = 0;
@@ -99,25 +98,25 @@ void print_hex(struct video *v,unsigned int num,uint8_t x)
 	}
 	if(x == 1)
     {
-        print(v,"0x");
+        video::print(v,"0x");
     }
     if(num == 0) {
-        printChar(v, '0');
+        video::printChar(v, '0');
         return;
     }
-    print_lenght(v,&buffer[10-i+1],i);
+    video::print_lenght(v,&buffer[10-i+1],i);
 }
 
-void print_char16(struct video *v,char16_t ch)
+void video::print_char16(struct video_info *v,char16_t ch)
 {
-    printChar(v, ch & 0xFF);
+    video::printChar(v, ch & 0xFF);
 }
 
-void print16_length(struct video *v,char16_t *text,int len)
+void video::print16_length(struct video_info *v,char16_t *text,int len)
 {
     for(int i = 0;i < len;i++)
     {
-        print_char16(v, text[i]);
+        video::print_char16(v, text[i]);
     }
 
 }
