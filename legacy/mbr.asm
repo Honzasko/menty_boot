@@ -90,6 +90,9 @@ jmp codeseg:main32
 [bits 32]
 main32:
 mov esp,0x00100000  ;set stack for protected mode
+mov ax, word [dap.sectors_to_read]
+mov word [diskinfo.length_bootloader], ax
+and eax,0
 lea eax, [diskinfo]
 push eax
 call 0x00007E00 ;call main function of second stage 
@@ -109,6 +112,7 @@ stack32 dd 0
 diskinfo:
     .bootdrive db 0
     .mmap_length dw 0
+    .length_bootloader dw 0 ; in 512 byte sectors
 
 error db 0
 index dd 0

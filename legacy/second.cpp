@@ -1,38 +1,17 @@
+#include <cstdint>
 #include <stdint.h>
-#include <uchar.h>
-#include "include/asm.hpp"
 #include "include/video.hpp"
 #include "include/disk.hpp"
-#include "include/gpt.hpp"
-#include "include/fat.hpp"
-#include "include/mmap.hpp"
+#include "include/memory.hpp"
+#include "include/basics.hpp"
 
 struct video_info v;
 
-struct bootinfo {
-    uint8_t driveNumber;
-    uint16_t mmap_lenght;
-}__attribute__((packed));
-
-int strlen(const char* text) {
-    int len = 0;
-    while (text[len] != 0)
-        len++;
-    return len;
-}
-
-int strcmp(const char* a, const char* b, int len) {
-    for (int i = 0; i < len; i++) {
-        if (a[i] != b[i]) {
-            return 0;
-        }
-    }
-    return 1;
-}
 
 
 extern "C" void boot_Main(uint32_t ptrBootInfo) {
-    struct bootinfo info = *(struct bootinfo*)ptrBootInfo;
+    bootinfo *inf = reinterpret_cast<struct bootinfo*>(ptrBootInfo);
+    bootinfo info = *inf;
     v.cursor = 0;
     v.color = 0x0f;
 
@@ -41,16 +20,19 @@ extern "C" void boot_Main(uint32_t ptrBootInfo) {
 
     video::print(&v, "Test\nnum:");
     video::print_hex(&v, n,1);
+    video::print(&v, "\n");
     Disk disk;
     switch (n) {
-        case 0x80: Identify(&disk, PRIMARY_BUS, 0);break;
-        case 0x81: Identify(&disk, PRIMARY_BUS, 1);break;
-        case 0x82: Identify(&disk, SECONDARY_BUS, 0);break;
-        case 0x83: Identify(&disk, SECONDARY_BUS, 1);break;
+        case 0x80: ATA::Identify(&disk, PRIMARY_BUS, 0);break;
+        case 0x81: ATA::Identify(&disk, PRIMARY_BUS, 1);break;
+        case 0x82: ATA::Identify(&disk, SECONDARY_BUS, 0);break;
+        case 0x83: ATA::Identify(&disk, SECONDARY_BUS, 1);break;
     }
-    video::print(&v, "\nMax LBA: ");
-    video::print_num(&v, disk.MaxLBA);
-    video::print(&v, "\n");
+    if (disk.available) {
+            video::print(&v, "Max LBA: ");
+            video::print_num(&v, disk.MaxLBA);
+            video::print(&v, "\n");
+    }
     
     MMAP_entry* mmap = (MMAP_entry*)(0x0000510);
     for (uint16_t i = 0; i < info.mmap_lenght;i++) {

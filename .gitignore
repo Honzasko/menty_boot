@@ -1,6 +1,7 @@
 legacy/build
 legacy/asm.o
-legacy/disk.o
+legacy/ata.o
+legacy/basics.o
 legacy/drive.img
 legacy/dump.bin
 legacy/mbr.bin

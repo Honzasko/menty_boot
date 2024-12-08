@@ -21,6 +21,7 @@
 
 
 typedef struct {
+bool available;
 uint16_t bus;
 uint16_t dev;
 uint8_t type;
@@ -29,5 +30,7 @@ uint32_t MaxLBA;
 }Disk;
 
 
-void Identify(Disk *d,uint16_t bus,uint8_t slave);
-uint8_t Read(Disk *d,uint32_t LBA,uint16_t num,uint32_t addr);
+namespace ATA {
+    void Identify(Disk *d,uint16_t bus,uint8_t slave);
+    uint8_t Read(Disk *d,uint32_t LBA,uint16_t num,uint32_t addr);
+}
